@@ -289,13 +289,14 @@ async def check_resource_on_map(resource_name):
 
 async def get_resource_map_mes(name):
     count = 0
-    mes = []
+    mes = None
+    img_list = []
     if data["date"] !=  time.strftime("%d"):
         await init_point_list_and_map()
 
     if not (name in data["can_query_type_list"]):
-        mes = [f"没有 {name} 这种资源。\n发送 星铁资源列表 查看所有资源名称"]
-        return mes
+        mes = f"没有 {name} 这种资源。\n发送 星铁资源列表 查看所有资源名称"
+        return mes,img_list
     
     try :
         shutil.rmtree(os.path.join(FILE_PATH, "tmp"))
@@ -304,7 +305,6 @@ async def get_resource_map_mes(name):
     else:
         os.mkdir(os.path.join(FILE_PATH, "tmp"))   
     resource_id = int(data["can_query_type_list"][name])
-    img_list = []
     for map in map_list:
         if (resource_id in map["resource"]):
             global ORIGIN
@@ -316,11 +316,11 @@ async def get_resource_map_mes(name):
             base64_str = 'base64://' + base64.b64encode(map_obj.get_BIO().getvalue()).decode()
             img_list += [{"upname": map["upname"], "name":map["name"], "b64":base64_str}]
             count += map_obj.get_resource_count()
-    mes += [f"※ {name} 一共找到 {count} 个位置点\n※ 数据来源于米游社wiki"]
+    mes = f"※ {name} 一共找到 {count} 个位置点\n※ 数据来源于米游社wiki"
 
     if not count:
-        mes = [f"没有找到 {name} 资源的位置，可能米游社wiki还没更新。"]
-        return mes
+        mes = f"没有找到 {name} 资源的位置，可能米游社wiki还没更新。"
+        return mes,img_list
     
     return mes,img_list
 

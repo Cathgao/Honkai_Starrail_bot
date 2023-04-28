@@ -9,25 +9,26 @@ sv = Service("星铁资源查询")
 # @sv.on_rex(r"(\w+)(?:在哪|在哪里|哪有|哪里有)")
 @sv.on_rex(r"(#)(?:哪有|哪里有)(\w+)")
 async def inquire_resource_points(bot, ev):
-    resource_name = ev['match'].group(1)
+    resource_name = ev['match'].group(2)
     if resource_name == "":
         return
     mes_list = []
-    msg = await get_resource_map_mes(resource_name)
+    mes,msg = await get_resource_map_mes(resource_name)
     if len(msg) > 1 :
-        for res in msg[1]:
-            mes = f"{res['upname']}  {res['name']} \n [CQ:image,file={res['b64']}]"
+        for res in msg:
+            msg_data = f"{res['upname']}  {res['name']} \n [CQ:image,file={res['b64']}]"
             data = {
                 "type": "node",
                 "data": {
                     "name": "色图机器人",
                     "uin": "2854196310",
-                    "content": mes
+                    "content": msg_data
                 }
             }
             mes_list.append(data)
-    await bot.send(ev, msg[0][0], at_sender=True)
-    await bot.send_group_forward_msg(group_id=ev['group_id'], messages=mes_list)
+    await bot.send(ev, mes, at_sender=True)
+    if mes_list :
+        await bot.send_group_forward_msg(group_id=ev['group_id'], messages=mes_list)
 
 
 @sv.on_fullmatch('星铁资源列表')
