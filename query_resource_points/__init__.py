@@ -12,13 +12,26 @@ async def inquire_resource_points(bot, ev):
     resource_name = ev['match'].group(1)
     if resource_name == "":
         return
-
-    await bot.send(ev, await get_resource_map_mes(resource_name), at_sender=True)
+    mes_list = []
+    msg = await get_resource_map_mes(resource_name)
+    if len(msg) > 1 :
+        for res in msg[1]:
+            mes = f"{res['upname']}  {res['name']} \n [CQ:image,file={res['b64']}]"
+            data = {
+                "type": "node",
+                "data": {
+                    "name": "色图机器人",
+                    "uin": "2854196310",
+                    "content": mes
+                }
+            }
+            mes_list.append(data)
+    await bot.send(ev, msg[0][0], at_sender=True)
+    await bot.send_group_forward_msg(group_id=ev['group_id'], messages=mes_list)
 
 
 @sv.on_fullmatch('星铁资源列表')
 async def inquire_resource_list(bot, ev):
-    # 长条消息经常发送失败，所以只能这样了
     mes_list = []
     txt_list = get_resource_list_mes().split("\n")
     for txt in txt_list:

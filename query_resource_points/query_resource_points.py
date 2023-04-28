@@ -288,13 +288,15 @@ async def check_resource_on_map(resource_name):
         
 
 async def get_resource_map_mes(name):
-
+    count = 0
+    mes = []
     if data["date"] !=  time.strftime("%d"):
         await init_point_list_and_map()
 
     if not (name in data["can_query_type_list"]):
-        return f"没有 {name} 这种资源。\n发送 星铁资源列表 查看所有资源名称"
-
+        mes = [f"没有 {name} 这种资源。\n发送 星铁资源列表 查看所有资源名称"]
+        return mes
+    
     try :
         shutil.rmtree(os.path.join(FILE_PATH, "tmp"))
     except:
@@ -304,28 +306,23 @@ async def get_resource_map_mes(name):
     resource_id = int(data["can_query_type_list"][name])
     img_list = []
     for map in map_list:
-        if(resource_id in map["resource"]):
+        if (resource_id in map["resource"]):
             global ORIGIN
             map_id = map["id"]
             label_data = await download_json(f"{POINT_LIST_URL}{map_id}&{APP_LABEL}")
             data["all_resource_point_list"] = label_data["data"]["point_list"]
             ORIGIN = map["origin"]
-            Resource_map(name, map_id).get_BIO()
-            
-            
-            # with open(os.path.join(FILE_PATH, "tmp",f"map_{map_id}_res{resource_id}.png"), "wb") as tmp_img:
-            #     map_img.save(tmp_img)
-    # count = map.get_resource_count()
+            map_obj = Resource_map(name, map_id)
+            base64_str = 'base64://' + base64.b64encode(map_obj.get_BIO().getvalue()).decode()
+            img_list += [{"upname": map["upname"], "name":map["name"], "b64":base64_str}]
+            count += map_obj.get_resource_count()
+    mes += [f"※ {name} 一共找到 {count} 个位置点\n※ 数据来源于米游社wiki"]
 
     if not count:
-        return f"没有找到 {name} 资源的位置，可能米游社wiki还没更新。"
-
-    mes = f"资源 {name} 的位置如下\n"
-    mes += map.get_cq_cod()
-
-    mes += f"\n\n※ {name} 一共找到 {count} 个位置点\n※ 数据来源于米游社wiki"
-
-    return mes
+        mes = [f"没有找到 {name} 资源的位置，可能米游社wiki还没更新。"]
+        return mes
+    
+    return mes,img_list
 
 
 
