@@ -1,0 +1,4 @@
+.idea
+.idea/*
+almanac/__pycache__/
+__pycache__/
