@@ -6,8 +6,8 @@ from .query_resource_points import get_resource_map_mes, get_resource_list_mes, 
 sv = Service("星铁资源查询")
 
 
-@sv.on_rex(r"(\w+)(?:在哪|在哪里|哪有|哪里有)")
-@sv.on_rex(r"(?:哪有|哪里有)(\w+)")
+# @sv.on_rex(r"(\w+)(?:在哪|在哪里|哪有|哪里有)")
+@sv.on_rex(r"(#)(?:哪有|哪里有)(\w+)")
 async def inquire_resource_points(bot, ev):
     resource_name = ev['match'].group(1)
     if resource_name == "":
