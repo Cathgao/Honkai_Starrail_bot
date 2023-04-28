@@ -2,3 +2,6 @@
 .idea/*
 almanac/__pycache__/
 __pycache__/
+query_resource_points/icon/*
+query_resource_points/maps/*
+query_resource_points/tmp

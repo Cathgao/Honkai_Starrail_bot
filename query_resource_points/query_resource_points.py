@@ -26,11 +26,12 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 CENTER = None
-
+ORIGIN = None
 
 zoom = 0.5
 resource_icon_offset = (-int(150*0.5*zoom),-int(150*zoom))
 map_list = []
+map_origin_list = []
 
 data = {
     "all_resource_type":{
@@ -146,24 +147,31 @@ async def up_label_and_point_list():
         label_list = []
         for label in label_data["data"]["label_list"]:
             label_list += [label["id"]]
-        map_list[index] = {"id": map["id"], "upname": map["upname"], "name":map["name"],"resource":label_list}
+        map_list[index] = {"id": map["id"], "upname": map["upname"], "name":map["name"], "origin": map["origin"], "resource":label_list}
     data["date"] = time.strftime("%d")
     logger.info(f"资源点数据更新完成")
 
 async def download_map(map_id):
     # 下载地图文件
+    global map_origin_list
+    map_info = await download_json(MAP_URL + str(map_id) + "&" + APP_LABEL)
+    map_info = map_info["data"]["info"]["detail"]
+    if(map_info == ""):
+            return
+    map_info = json.loads(map_info)
+    map_origin = map_info["origin"]
     map_path = os.path.join(FILE_PATH,"maps",f"map_{map_id}.png")
     if not os.path.exists(map_path):
         logger.info(f"正在下载地图{map_id}图片")
-        map_info = await download_json(MAP_URL + str(map_id) + "&" + APP_LABEL)
-        map_info = map_info["data"]["info"]["detail"]
-        if(map_info == ""):
-            return
-        map_info = json.loads(map_info)
         map_url = map_info['slices'][0][0]["url"]
         map = await download_icon(map_url)
         with open(map_path, "wb") as icon_file:
             map.save(icon_file)
+        # map_origin_list += [{"id":map_id,"origin":map_origin}]
+    for index, map in enumerate(map_list):
+        if (map["id"] == map_id):
+            map_list[index] = {"id": map["id"], "upname": map["upname"], "name": map["name"], "origin": map_origin}
+
     
 async def up_map():
     logger.info(f"正在更新地图数据")
@@ -172,8 +180,7 @@ async def up_map():
         if("children" in maps_tree):
             for map in maps_tree["children"]:
                 global map_list
-                map_list += [
-                    {"id": map["id"], "upname": maps_tree["name"], "name":map["name"]}]
+                map_list += [{"id": map["id"], "upname": maps_tree["name"], "name":map["name"]}]
                 await download_map(map["id"])
     logger.info(f"地图数据更新完成")
 
@@ -237,8 +244,8 @@ class Resource_map(object):
         for x, y in self.resource_xy_list:
             # 把资源图片贴到地图上
             # 这时地图已经裁切过了，要以裁切后的地图左上角为中心再转换一次坐标
-            x += int((self.x_start/2)) 
-            y += int((self.y_start/2))
+            x += ORIGIN[0]
+            y += ORIGIN[1]
             self.map_image.paste(self.resource_icon, (x + resource_icon_offset[0], y + resource_icon_offset[1]), self.resource_icon)
             # self.map_image.paste(self.resource_icon,(x, y),self.resource_icon)
 
@@ -264,7 +271,14 @@ class Resource_map(object):
         self.map_image = self.map_image.convert('RGB')
         with open(os.path.join(FILE_PATH, "tmp",f"map_{self.map_id}_res{self.resource_id}.jpg"), "wb") as tmp_img:
             self.map_image.save(tmp_img, format='JPEG')
-        
+    
+    def get_BIO(self):
+        self.paste()
+        bio = BytesIO()
+        self.map_image = self.map_image.convert('RGB')
+        self.map_image.save(bio, format='JPEG')
+        return bio
+         
     def get_resource_count(self):
         return len(self.resource_xy_list)
 
@@ -288,12 +302,16 @@ async def get_resource_map_mes(name):
     else:
         os.mkdir(os.path.join(FILE_PATH, "tmp"))   
     resource_id = int(data["can_query_type_list"][name])
+    img_list = []
     for map in map_list:
         if(resource_id in map["resource"]):
+            global ORIGIN
             map_id = map["id"]
             label_data = await download_json(f"{POINT_LIST_URL}{map_id}&{APP_LABEL}")
             data["all_resource_point_list"] = label_data["data"]["point_list"]
-            Resource_map(name, map_id).save_img()
+            ORIGIN = map["origin"]
+            Resource_map(name, map_id).get_BIO()
+            
             
             # with open(os.path.join(FILE_PATH, "tmp",f"map_{map_id}_res{resource_id}.png"), "wb") as tmp_img:
             #     map_img.save(tmp_img)
