@@ -160,6 +160,8 @@ async def download_map(map_id):
             return
     map_info = json.loads(map_info)
     map_origin = map_info["origin"]
+    if not os.path.exists(os.path.join(FILE_PATH,"maps")):
+        os.mkdir(os.path.join(FILE_PATH, "maps"))
     map_path = os.path.join(FILE_PATH,"maps",f"map_{map_id}.png")
     if not os.path.exists(map_path):
         logger.info(f"正在下载地图{map_id}图片")
