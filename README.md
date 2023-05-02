@@ -15,7 +15,6 @@ git clone https://github.com/Cathgao/Honkai_Starrail_bot
 
 2. 在hoshino/config/\_\_bot\_\_.py文件中，MODULES_ON里添加 "Honkai_Starrail_bot"
 
-3. 手动在hoshino\modules\Honkai_Starrail_bot\query_resource_points中创建文件夹maps 否则会路径报错
 
 ## **使用**
 
