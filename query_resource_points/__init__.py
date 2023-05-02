@@ -2,6 +2,7 @@
 from loguru import logger
 from hoshino import Service
 from .query_resource_points import get_resource_map_mes, get_resource_list_mes, init_point_list_and_map
+import re
 
 sv = Service("星铁资源查询")
 
@@ -9,12 +10,13 @@ sv = Service("星铁资源查询")
 # @sv.on_rex(r"(\w+)(?:在哪|在哪里|哪有|哪里有)")
 @sv.on_rex(r"(#)(?:哪有|哪里有)(\w+)")
 async def inquire_resource_points(bot, ev):
-    resource_name = ev['match'].group(2)
-    if resource_name == "":
+    resource_name = ev['plain_text']
+    resource_name = re.findall("(?<=['有'])(.*?)$", resource_name)[0]
+    if not resource_name :
         return
     mes_list = []
     mes,msg = await get_resource_map_mes(resource_name)
-    if len(msg) > 1 :
+    if len(msg) :
         for res in msg:
             msg_data = f"{res['upname']}  {res['name']} \n [CQ:image,file={res['b64']}]"
             data = {
