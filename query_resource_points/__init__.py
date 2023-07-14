@@ -10,7 +10,7 @@ sv = Service("星铁资源查询")
 # @sv.on_rex(r"(\w+)(?:在哪|在哪里|哪有|哪里有)")
 @sv.on_rex(r"(#)(?:哪有|哪里有)(\w+)")
 async def inquire_resource_points(bot, ev):
-    resource_name = ev['plain_text']
+    resource_name = ev['raw_message']
     resource_name = re.findall("(?<=['有'])(.*?)$", resource_name)[0]
     if not resource_name :
         return
